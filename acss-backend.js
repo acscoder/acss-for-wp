@@ -3,19 +3,29 @@ import {
     add_init_css,
     atomic_css_compile,
     atomic_css_compile_from_html,
-  } from "./wasm/acss.js";
+  } from "./pkg/acss.js";
+
+  import {
+    default as acss_config,
+  } from "./acss.config.js";
+  let acss_config_variables = JSON.stringify({...acss_config.variables,...acss_config.fonts,...acss_config.colors,...acss_config.grid});
+  let acss_config_breakpoints= JSON.stringify(acss_config.breakpoints );
 
     wasm().then((module) => {
-      add_css_to_body(add_init_css());
+      add_css_to_body(add_init_css( acss_config_variables ));
 
       const body = document.getElementsByTagName("BODY")[0];
+      let compiledcss = atomic_css_compile_from_html(body.innerHTML,acss_config_breakpoints);
 
-      let compiledcss = atomic_css_compile_from_html(body.innerHTML);
 
       add_css_to_body(compiledcss);
 
-      window.atomic_css_compile = atomic_css_compile;
-      window.atomic_css_compile_from_html = atomic_css_compile_from_html;
+      window.atomic_css_compile = function(classes){
+        return atomic_css_compile(classes,acss_config_breakpoints);
+      };
+      window.atomic_css_compile_from_html = function(html){
+          return atomic_css_compile_from_html(html,acss_config_breakpoints);
+      };
     });
   
   function add_css_to_body(css) {
